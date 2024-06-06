@@ -36,7 +36,7 @@ func main() {
 
 	gw.NewHTTPGateway(app, sv0)
 
-	PORT := os.Getenv("DB_PORT_LOGIN")
+	PORT := os.Getenv("PORT")
 
 	if PORT == "" {
 		PORT = "8080"
