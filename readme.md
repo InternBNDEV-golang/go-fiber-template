@@ -12,6 +12,16 @@
 go mod tidy
 ```
 
+# Set Environment `.env`
+```
+DATABASE_NAME= <database in mongodb>
+MONGODB_URI= <database in mongodb>
+PORT=1818
+
+JWT_SECRET_KEY=Test
+JWT_REFESH_SECRET_KEY=Test
+```
+
 # Start APP
 
 ```sh
