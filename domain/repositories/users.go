@@ -19,44 +19,42 @@ type usersRepository struct {
 }
 
 type IUsersRepository interface {
-	InsertNewUser(data *entities.NewUserBody) bool
-	FindAll() ([]entities.UserDataFormat, error)
+	InsertUser(data entities.UserDataModel) error
+	FindAll() (*[]entities.UserDataModel, error)
 }
 
 func NewUsersRepository(db *MongoDB) IUsersRepository {
 	return &usersRepository{
 		Context:    db.Context,
-		Collection: db.MongoDB.Database(os.Getenv("DATABASE_NAME")).Collection("test"),
+		Collection: db.MongoDB.Database(os.Getenv("DATABASE_NAME")).Collection("users"),
 	}
 }
 
-func (repo usersRepository) InsertNewUser(data *entities.NewUserBody) bool {
+func (repo *usersRepository) InsertUser(data entities.UserDataModel) error {
 	if _, err := repo.Collection.InsertOne(repo.Context, data); err != nil {
 		fiberlog.Errorf("Users -> InsertNewUser: %s \n", err)
-		return false
+		return err
 	}
-	return true
+	return nil
 }
 
-func (repo usersRepository) FindAll() ([]entities.UserDataFormat, error) {
+func (repo *usersRepository) FindAll() (*[]entities.UserDataModel, error) {
 	options := options.Find()
 	filter := bson.M{}
+	var users []entities.UserDataModel
+
 	cursor, err := repo.Collection.Find(repo.Context, filter, options)
 	if err != nil {
 		fiberlog.Errorf("Users -> FindAll: %s \n", err)
 		return nil, err
 	}
 	defer cursor.Close(repo.Context)
-	pack := make([]entities.UserDataFormat, 0)
-	for cursor.Next(repo.Context) {
-		var item entities.UserDataFormat
 
-		err := cursor.Decode(&item)
-		if err != nil {
-			continue
-		}
-
-		pack = append(pack, item)
+	err = cursor.All(repo.Context, &users)
+	if err != nil {
+		fiberlog.Errorf("Users -> FindAll: %s \n", err)
+		return nil, err
 	}
-	return pack, nil
+
+	return &users, nil
 }

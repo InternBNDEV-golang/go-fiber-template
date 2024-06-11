@@ -2,31 +2,31 @@ package gateways
 
 import (
 	"go-fiber-template/domain/entities"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func (h HTTPGateway) GetAllUserData(ctx *fiber.Ctx) error {
+func (h *HTTPGateway) GetAllUserData(ctx *fiber.Ctx) error {
 
-	data, err := h.UserService.GetAllUser()
+	data, err := h.UserService.GetAllUsers()
 	if err != nil {
 		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseModel{Message: "cannot get all users data"})
 	}
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success", Data: data})
 }
 
-func (h HTTPGateway) CreateNewUserAccount(ctx *fiber.Ctx) error {
+func (h *HTTPGateway) CreateUser(ctx *fiber.Ctx) error {
 
-	var bodyData entities.NewUserBody
+	bodyData := entities.UserDataModel{}
 	if err := ctx.BodyParser(&bodyData); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid json body"})
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(entities.ResponseMessage{Message: "invalid json body"})
 	}
 
-	status := h.UserService.InsertNewAccount(&bodyData)
-	log.Println("status after ", status)
+	if bodyData.Username == "" || bodyData.Email == "" || bodyData.UserID == "" {
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(entities.ResponseMessage{Message: "invalid json body"})
+	}
 
-	if !status {
+	if err := h.UserService.InsertNewUser(bodyData); err != nil {
 		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseModel{Message: "cannot insert new user account."})
 	}
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success"})

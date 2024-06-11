@@ -7,20 +7,22 @@ import (
 	gw "go-fiber-template/src/gateways"
 	"go-fiber-template/src/middlewares"
 	sv "go-fiber-template/src/services"
+	"log"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 
 	// // // remove this before deploy ###################
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	// /// ############################################
 
 	app := fiber.New(configuration.NewFiberConfiguration())
@@ -30,9 +32,9 @@ func main() {
 
 	mongodb := ds.NewMongoDB(10)
 
-	userMongo := repo.NewUsersRepository(mongodb)
+	userRepo := repo.NewUsersRepository(mongodb)
 
-	sv0 := sv.NewUsersService(userMongo)
+	sv0 := sv.NewUsersService(userRepo)
 
 	gw.NewHTTPGateway(app, sv0)
 
