@@ -3,6 +3,8 @@ package services
 import (
 	"go-fiber-template/domain/entities"
 	"go-fiber-template/domain/repositories"
+	"go-fiber-template/httpclient"
+	"time"
 )
 
 type usersService struct {
@@ -10,8 +12,8 @@ type usersService struct {
 }
 
 type IUsersService interface {
-	GetAllUser() ([]entities.UserDataFormat, error)
-	InsertNewAccount(data *entities.NewUserBody) bool
+	GetAllUsers() (*[]entities.UserDataModel, error)
+	InsertNewUser(data entities.UserDataModel) error
 }
 
 func NewUsersService(repo0 repositories.IUsersRepository) IUsersService {
@@ -20,17 +22,23 @@ func NewUsersService(repo0 repositories.IUsersRepository) IUsersService {
 	}
 }
 
-func (sv usersService) GetAllUser() ([]entities.UserDataFormat, error) {
-	userData, err := sv.UsersRepository.FindAll()
+func (sv *usersService) GetAllUsers() (*[]entities.UserDataModel, error) {
+	data, err := sv.UsersRepository.FindAll()
 	if err != nil {
 		return nil, err
 	}
 
-	return userData, nil
+	return data, nil
 
 }
 
-func (sv usersService) InsertNewAccount(data *entities.NewUserBody) bool {
-	status := sv.UsersRepository.InsertNewUser(data)
-	return status
+func (sv *usersService) InsertNewUser(data entities.UserDataModel) error {
+	data.CreatedAt = time.Now().Add(7 * time.Hour)
+	dataIp, err := httpclient.GetIP()
+	if err != nil {
+		return err
+	}
+	data.Ip = dataIp
+
+	return sv.UsersRepository.InsertUser(data)
 }
